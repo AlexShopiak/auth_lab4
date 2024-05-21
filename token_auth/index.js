@@ -10,7 +10,7 @@ const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const SESSION_KEY = 'Authorization';
+const SESSION_KEY = 'authorization';
 
 class Session {
     #sessions = {}
