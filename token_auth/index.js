@@ -42,60 +42,45 @@ class Session {
         return this.#sessions[key];
     }
 
-    init(res) {
+    init() {
         const sessionId = uuid.v4();
-        this.set(sessionId);
-
+        console.log("GENERATE", sessionId)
         return sessionId;
     }
 
-    destroy(req, res) {
-        const sessionId = req.sessionId;
+    destroy(sessionId) {
         delete this.#sessions[sessionId];
+        console.log("RESTROY", sessionId)
         this.#storeSessions();
     }
 }
 
 const sessions = new Session();
 
-app.use((req, res, next) => {
-    let currentSession = {};
-    let sessionId = req.get(SESSION_KEY);
-
-    if (sessionId) {
-        currentSession = sessions.get(sessionId);
-        if (!currentSession) {
-            currentSession = {};
-            sessionId = sessions.init(res);
-        }
-    } else {
-        sessionId = sessions.init(res);
-    }
-
-    req.session = currentSession;
-    req.sessionId = sessionId;
-
-    onFinished(req, () => {
-        const currentSession = req.session;
-        const sessionId = req.sessionId;
-        sessions.set(sessionId, currentSession);
-    });
-
-    next();
-});
-
 app.get('/', (req, res) => {
-    if (req.session.username) {
-        return res.json({
-            username: req.session.username,
-            logout: 'http://localhost:3000/logout'
-        })
+    const token = req.headers[SESSION_KEY];
+    if (token) {
+        req.session = sessions.get(token);
+    }
+    console.log("GET", req.session, token)
+    if (req.session) {
+        if (req.session.username){
+            return res.json({
+                username: req.session.username,
+                logout: 'http://localhost:3000/logout'
+            })
+        }
     }
     res.sendFile(path.join(__dirname+'/index.html'));
 })
 
 app.get('/logout', (req, res) => {
-    sessions.destroy(req, res);
+    const token = req.headers[SESSION_KEY];
+    if (token) {
+        req.sessionId = token;
+    }
+    console.log("LOGOUT", req.sessionId)
+    sessions.destroy(req.sessionId);
     res.redirect('/');
 });
 
@@ -114,6 +99,7 @@ const users = [
 
 app.post('/api/login', (req, res) => {
     const { login, password } = req.body;
+    console.log("LOGIN", login, password)
 
     const user = users.find((user) => {
         if (user.login == login && user.password == password) {
@@ -123,10 +109,10 @@ app.post('/api/login', (req, res) => {
     });
 
     if (user) {
-        req.session.username = user.username;
-        req.session.login = user.login;
-
-        res.json({ token: req.sessionId });
+        const sessionId = sessions.init();
+        const currentSession = {"username":user.username,"login":user.login}
+        sessions.set(sessionId, currentSession);
+        res.json({ token: sessionId });
     }
 
     res.status(401).send();
