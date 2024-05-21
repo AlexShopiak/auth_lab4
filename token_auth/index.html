@@ -117,7 +117,7 @@
     </style>
 
     <script>
-        const session = sessionStorage.getItem('session');
+        const session = localStorage.getItem('session');
 
         let token;
 
@@ -162,7 +162,7 @@
                 url: '/logout',
                 headers: {Authorization: token}
             }).then((response) => {
-                sessionStorage.removeItem('session');
+                localStorage.removeItem('session');
                 location.reload();
             }).catch((response) => {
                 loginErrorMsg.style.opacity = 1;
@@ -183,7 +183,7 @@
                     password
                 }
             }).then((response) => {
-                sessionStorage.setItem('session', JSON.stringify(response.data));
+                localStorage.setItem('session', JSON.stringify(response.data));
                 location.reload();
             }).catch((response) => {
                 loginErrorMsg.style.opacity = 1;
