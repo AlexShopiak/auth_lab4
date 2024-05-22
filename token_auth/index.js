@@ -27,7 +27,7 @@ class Session {
     }
 
     #storeSessions() {
-        fs.writeFileSync('./sessions.json', JSON.stringify(this.#sessions), 'utf-8');
+        fs.writeFileSync('./sessions.json', JSON.stringify(this.#sessions, null, 2), 'utf-8');
     }
 
     set(key, value) {
