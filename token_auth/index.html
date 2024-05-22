@@ -18,10 +18,16 @@
                 <p id="login-error-msg">Invalid username <span id="error-msg-second-line">and/or password</span></p>
             </div>
 
+            <div id="signup-success-msg-holder">
+                <p id="signup-success-msg">User created</p>
+            </div>
+
             <form id="login-form" action="/api/login" method="post">
                 <input type="text" name="login" id="username-field" class="login-form-field" placeholder="Username">
                 <input type="password" name="password" id="password-field" class="login-form-field" placeholder="Password">
                 <input type="submit" value="Login" id="login-form-submit">
+                &nbsp;
+                <input type="submit" value="Signup" id="signup-form-submit">
             </form>
 
         </main>
@@ -66,6 +72,14 @@
             align-items: center;
         }
 
+        #signup-success-msg-holder {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            justify-items: center;
+            align-items: center;
+        }
+
         #login-error-msg {
             width: 23%;
             text-align: center;
@@ -76,6 +90,19 @@
             color: #8a0000;
             border: 1px solid #8a0000;
             background-color: #e58f8f;
+            opacity: 0;
+        }
+
+        #signup-success-msg {
+            width: 23%;
+            text-align: center;
+            margin: 0;
+            padding: 5px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #008a22;
+            border: 1px solid #008a22;
+            background-color: #8fe5a6;
             opacity: 0;
         }
 
@@ -114,6 +141,17 @@
             cursor: pointer;
             outline: none;
         }
+        #signup-form-submit {
+            width: 100%;
+            padding: 7px;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            background-color: #3a3a3a;
+            cursor: pointer;
+            outline: none;
+        }
     </style>
 
     <script>
@@ -139,6 +177,7 @@
 
                     loginForm.remove();
                     loginErrorMsg.remove();
+                    signupSuccessMsg.remove();
                     loginHeader.remove();
 
                     mainHolder.append(`Hello ${username}`);
@@ -150,7 +189,9 @@
 
         const loginForm = document.getElementById("login-form");
         const loginButton = document.getElementById("login-form-submit");
+        const signupButton = document.getElementById("signup-form-submit");
         const loginErrorMsg = document.getElementById("login-error-msg");
+        const signupSuccessMsg = document.getElementById("signup-success-msg");
         const logoutLink =  document.getElementById("logout");
 
         logoutLink.addEventListener("click", (e) => {
@@ -185,6 +226,26 @@
             }).then((response) => {
                 localStorage.setItem('session', JSON.stringify(response.data));
                 location.reload();
+            }).catch((response) => {
+                loginErrorMsg.style.opacity = 1;
+            });
+        })
+
+        signupButton.addEventListener("click", (e) => {
+            e.preventDefault();
+            const login = loginForm.login.value;
+            const password = loginForm.password.value;
+            console.log("SignUp", login, password)
+
+            axios({
+                method: 'post',
+                url: '/api/signup',
+                data: {
+                    login,
+                    password
+                }
+            }).then((response) => {
+                signupSuccessMsg.style.opacity = 1;
             }).catch((response) => {
                 loginErrorMsg.style.opacity = 1;
             });
