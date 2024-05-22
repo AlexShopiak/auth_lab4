@@ -155,6 +155,14 @@
     </style>
 
     <script>
+        function isTokenExpiring(token) {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const expirationTime = payload.exp * 1000;
+            const currentTime = new Date().getTime();
+            const timeLeft = expirationTime - currentTime;
+            return timeLeft < 60 * 60 * 1000; // Less than 1 hour
+        }
+
         const session = localStorage.getItem('session');
 
         let token;
@@ -164,26 +172,39 @@
         } catch(e) {}
 
         if (token) {
-            axios.get('/', {
-                headers: {
-                    Authorization: token
-                }
-            }).then((response) => {
-                const { username } = response.data;
+            if(isTokenExpiring(token)) {
+                axios.post('/api/refresh', {
+                    headers: {Authorization: token}
+                }).then((response) => {
+                    const newToken = responce.data;
+                    localStorage.removeItem('session');
+                    localStorage.setItem('session', JSON.stringify(response.data));
+                    location.reload();
+                }).catch((responce)=>{
+                    loginErrorMsg.style.opacity = 1;
+                });
+            } else {
+                axios.get('/', {
+                    headers: {
+                        Authorization: token
+                    }
+                }).then((response) => {
+                    const { username } = response.data;
 
-                if (username) {
-                    const mainHolder = document.getElementById("main-holder");
-                    const loginHeader = document.getElementById("login-header");
+                    if (username) {
+                        const mainHolder = document.getElementById("main-holder");
+                        const loginHeader = document.getElementById("login-header");
 
-                    loginForm.remove();
-                    loginErrorMsg.remove();
-                    signupSuccessMsg.remove();
-                    loginHeader.remove();
+                        loginForm.remove();
+                        loginErrorMsg.remove();
+                        signupSuccessMsg.remove();
+                        loginHeader.remove();
 
-                    mainHolder.append(`Hello ${username}`);
-                    logoutLink.style.opacity = 1;
-                }
-            });
+                        mainHolder.append(`Hello ${username}`);
+                        logoutLink.style.opacity = 1;
+                    }
+                });
+            }
         }
 
 
