@@ -163,6 +163,38 @@ app.post('/api/signup', async (req, res) => {
     }
 });
 
+app.post('/api/refresh', async (req, res) => {//BTA
+    console.log("REFRESH", req.sessionId);
+
+    const options = {
+        method: 'POST',
+        url: 'https://dev-7sfm4dwi0agzg42e.us.auth0.com/oauth/token',
+        headers: {'content-type': 'application/x-www-form-urlencoded'},
+        data: {
+            grant_type: 'refresh_token',
+            client_id : '2rt9zMZergxHgi7SqMDSo2nBLXw2gHV3',
+            client_secret : 'UhwrkkaOHZ8jLwirvoivMAG8n1AeEe6NfI1itImdyjEbAzsygoo0Pjizl_HuYRD6',
+            refresh_token : req.session.refresh_token,
+        }
+    }
+
+    try {
+        const response = await axios(options);
+        console.log(response.data);
+
+        const refreshedToken = response.data.access_token_token;
+        const currentSession = req.session;
+
+        sessions.destroy(req.sessionId);
+        sessions.set(refreshedToken, currentSession);
+        res.json({ token: refreshedToken });
+
+    } catch (error) {
+        console.error('Error getting refreshing token', error.response ? error.response.data : error.message);
+        res.status(401).send();
+    }
+});
+
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })
