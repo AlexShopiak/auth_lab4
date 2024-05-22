@@ -120,6 +120,49 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+app.post('/api/signup', async (req, res) => {
+    const { login, password } = req.body;
+    console.log("SIGNUP", login, password);
+
+    try {
+        const optionsGetToken = {
+            method: 'POST',
+            url: 'https://dev-7sfm4dwi0agzg42e.us.auth0.com/oauth/token',
+            headers: {'content-type': 'application/x-www-form-urlencoded'},
+            data: {
+                audience: 'https://dev-7sfm4dwi0agzg42e.us.auth0.com/api/v2/',
+                grant_type : 'client_credentials',
+                client_id : '2rt9zMZergxHgi7SqMDSo2nBLXw2gHV3',
+                client_secret : 'UhwrkkaOHZ8jLwirvoivMAG8n1AeEe6NfI1itImdyjEbAzsygoo0Pjizl_HuYRD6',
+            }
+        }
+
+        const tokenData = await axios(optionsGetToken);
+        const token = tokenData.data.access_token;
+
+        const optionsCreateUser = {
+            method: 'POST',
+            url: 'https://dev-7sfm4dwi0agzg42e.us.auth0.com/api/v2/users',
+            headers: {
+                'authorization': `Bearer ${token}`,
+                'content-type': 'application/json'
+              },
+            data: {
+                email: login,
+                password: password,
+                connection: 'Username-Password-Authentication',
+            }
+        }
+
+        const newUser = await axios(optionsCreateUser);
+        res.json({ new_user: login });//TODO Custom Success Msg
+        console.log(newUser.data)
+    } catch (error) {
+        console.error('Error creating user', error.response ? error.response.data : error.message);
+        res.status(409).send();
+    }
+});
+
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })
