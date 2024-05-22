@@ -57,12 +57,18 @@ class Session {
 
 const sessions = new Session();
 
-app.get('/', (req, res) => {
+app.use((req, res, next) => {
     const token = req.headers[SESSION_KEY];
     if (token) {
         req.session = sessions.get(token);
+        req.sessionId = token;
     }
-    console.log("GET", req.session, token)
+
+    next();
+});
+
+app.get('/', (req, res) => {
+    console.log("GET", req.session, req.sessionId)
     if (req.session) {
         if (req.session.username){
             return res.json({
@@ -75,10 +81,6 @@ app.get('/', (req, res) => {
 })
 
 app.get('/logout', (req, res) => {
-    const token = req.headers[SESSION_KEY];
-    if (token) {
-        req.sessionId = token;
-    }
     console.log("LOGOUT", req.sessionId)
     sessions.destroy(req.sessionId);
     res.redirect('/');
