@@ -1,6 +1,6 @@
 const uuid = require('uuid');
 const express = require('express');
-const onFinished = require('on-finished');
+const axios = require('axios');
 const bodyParser = require('body-parser');
 const path = require('path');
 const port = 3000;
@@ -99,9 +99,38 @@ const users = [
     }
 ]
 
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
     const { login, password } = req.body;
-    console.log("LOGIN", login, password)
+    console.log("LOGIN", login, password);
+
+    const options = {
+        method: 'POST',
+        url: 'https://dev-7sfm4dwi0agzg42e.us.auth0.com/oauth/token',
+        headers: {'content-type': 'application/x-www-form-urlencoded'},
+        data: {
+            grant_type: 'password',
+            audience: 'https://dev-7sfm4dwi0agzg42e.us.auth0.com/api/v2/',
+            client_id: '2rt9zMZergxHgi7SqMDSo2nBLXw2gHV3',
+            client_secret: 'UhwrkkaOHZ8jLwirvoivMAG8n1AeEe6NfI1itImdyjEbAzsygoo0Pjizl_HuYRD6',
+            username: login,
+            password: password,
+            scope: 'offline_access'
+        }
+    }
+
+    try {
+        const response = await axios(options);
+        console.log(response.data);
+
+        const sessionId = response.data.access_token;
+        const currentSession = {"username": login, "refresh":response.data.refresh_token}
+        sessions.set(sessionId, currentSession);
+        res.json({ token: sessionId });
+
+    } catch (error) {
+        console.error('Error getting user token', error.response ? error.response.data : error.message);
+        res.status(401).send();
+    }
 
     const user = users.find((user) => {
         if (user.login == login && user.password == password) {
