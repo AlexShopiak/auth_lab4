@@ -86,19 +86,6 @@ app.get('/logout', (req, res) => {
     res.redirect('/');
 });
 
-const users = [
-    {
-        login: 'Login',
-        password: 'Password',
-        username: 'Username',
-    },
-    {
-        login: 'Login1',
-        password: 'Password1',
-        username: 'Username1',
-    }
-]
-
 app.post('/api/login', async (req, res) => {
     const { login, password } = req.body;
     console.log("LOGIN", login, password);
@@ -131,22 +118,6 @@ app.post('/api/login', async (req, res) => {
         console.error('Error getting user token', error.response ? error.response.data : error.message);
         res.status(401).send();
     }
-
-    const user = users.find((user) => {
-        if (user.login == login && user.password == password) {
-            return true;
-        }
-        return false
-    });
-
-    if (user) {
-        const sessionId = sessions.init();
-        const currentSession = {"username":user.username,"login":user.login}
-        sessions.set(sessionId, currentSession);
-        res.json({ token: sessionId });
-    }
-
-    res.status(401).send();
 });
 
 app.listen(port, () => {
